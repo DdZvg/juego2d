@@ -27,6 +27,7 @@ La primera configuración descarga y compila SFML y sus dependencias; requiere c
 ## Fase 1: movimiento, cámara y colisiones
 
 - Mueve al personaje con **WASD** o las **flechas**; las diagonales mantienen la misma velocidad que el movimiento horizontal o vertical.
+- El personaje usa un ciclo de carrera de 6 fotogramas en 8 direcciones y poses de reposo orientadas; al correr, la animación sigue la dirección del movimiento y los ataques siguen apuntando al mouse.
 - La cámara sigue suavemente al jugador y respeta los límites del escenario de 3000 × 3000 unidades.
 - El escenario provisional muestra una cuadrícula oscura; el mouse se convierte a coordenadas del mundo mediante la vista actual de la cámara.
 - Hay paredes y obstáculos de prueba. El jugador no puede atravesarlos, incluso con desplazamientos grandes, y se desliza por sus bordes al moverse en diagonal.

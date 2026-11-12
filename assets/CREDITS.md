@@ -5,7 +5,10 @@ tal como exige la sección 26 del documento maestro.
 
 | Archivo | Autor | Fuente | Licencia | Uso |
 | --- | --- | --- | --- | --- |
-| — | — | — | — | Todavía no hay recursos externos registrados |
+| `sprites/player/reference/Gemini_Generated_Image_z9jj8fz9jj8fz9jj-Photoroom.png` | Proporcionado por el usuario | Adjunto en la conversación | No especificada | Referencia visual de ciclo de carrera en 8 direcciones; no se carga en el juego. |
+| `sprites/player/reference/Gemini_Generated_Image_hrbmpchrbmpchrbm-Photoroom.png` | Proporcionado por el usuario | Adjunto en la conversación | No especificada | Fuente de poses idle de 8 direcciones; original no se carga directamente. |
+| `sprites/player/sheet_idle_8dir.png` | Derivado de imagen proporcionada por el usuario | `reference/Gemini_Generated_Image_hrbmpchrbmpchrbm-Photoroom.png` | La del recurso fuente | Poses idle recortadas para el juego. |
+| `sprites/player/sheet_locomotion_8dir.png` | Derivado de imagen proporcionada por el usuario | `reference/Gemini_Generated_Image_z9jj8fz9jj8fz9jj-Photoroom.png` | La del recurso fuente | Ciclo de carrera de 6 fotogramas en 8 direcciones. |
 
 ## Reglas
 

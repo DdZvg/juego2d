@@ -1,65 +1,36 @@
 # Sprites del jugador
 
-Coloca aquí las imágenes del personaje: reposo, caminata, ataque, daño y
-muerte. La ruta completa es:
+Coloca aquí las hojas de sprites del personaje: reposo, caminata, ataque,
+daño y muerte. La ruta completa es:
 
 ```text
 assets\sprites\player\
 ```
 
-## Formato recomendado (provisional)
+Las imágenes originales proporcionadas por el usuario están en `reference/`.
+Las hojas derivadas y usadas por el juego son `sheet_locomotion_8dir.png`
+(6 fotogramas para cada una de las 8 direcciones) y `sheet_idle_8dir.png`
+(una pose por dirección). Se recortaron las poses del personaje para excluir
+rótulos y otras animaciones de las láminas; los originales se conservaron.
 
-Estos valores son una propuesta para mantener el pixel art coherente. Se
-confirmarán antes de integrar los sprites en el código.
+- Formato de las hojas integradas: PNG RGBA con transparencia.
+- Tamaño de fotograma: **128 × 128 px**.
+- Direcciones: `up`, `up-right`, `right`, `down-right`, `down`, `down-left`, `left`, `up-left`.
+- `idle` usa una pose por dirección; `walk` usa 6 fotogramas por dirección.
 
-- Formato: PNG con fondo transparente.
-- Tamaño de cada fotograma: **48 × 48 px**.
-- Todos los fotogramas de una animación deben medir lo mismo.
-- Personaje centrado en el lienzo y sin escalado ni antialiasing.
-- Direcciones: `down`, `left`, `right`, `up`.
-- Fotogramas recomendados:
-  - `idle`: 2 fotogramas.
-  - `walk`: 4 a 6 fotogramas.
-  - `attack`: 3 a 4 fotogramas (para la Fase 2/3).
-  - `hurt` y `death`: cuando se integren vida y muerte definitivas.
+## Distribución de las hojas integradas
 
-## Hojas de animación (recomendado)
+Las hojas derivadas usan fotogramas de **128 × 128 px** con transparencia:
 
-Una hoja por animación:
+- `sheet_idle_8dir.png`: una fila por dirección en el orden indicado arriba.
+- `sheet_locomotion_8dir.png`: ocho filas en el mismo orden; seis fotogramas
+  de izquierda a derecha en cada fila.
+- El juego carga estas hojas si están disponibles y conserva las hojas
+  anteriores como respaldo para reposo y caminata.
 
-```text
-player_idle.png
-player_walk.png
-player_attack.png
-player_hurt.png
-player_death.png
-```
+## Carga
 
-Distribución de la hoja:
-
-- Filas, en este orden: `down`, `left`, `right`, `up`.
-- Columnas: fotogramas de la animación, de izquierda a derecha.
-- La hoja de caminata quedaría, por ejemplo, de 4 filas × 4 columnas.
-
-## Fotogramas individuales (alternativa)
-
-Si prefieres archivos separados, usa este patrón:
-
-```text
-player_walk_down_00.png
-player_walk_down_01.png
-player_walk_left_00.png
-player_walk_left_01.png
-...
-```
-
-Si ya tienes las imágenes con otro nombre o distribución, no las
-renombres todavía: avísame y adaptamos el cargador a tu formato.
-
-## Importante
-
-- El juego actual dibuja al jugador con formas geométricas; los sprites
-  todavía no se cargan. La integración se hará en una tarea autorizada y
-  con su correspondiente compilación y prueba.
-- Registra el origen y la licencia de cada imagen en
-  `assets/CREDITS.md`.
+El juego carga estas hojas desde `assets/sprites/player/`. Si faltan, usa
+las hojas anteriores como respaldo. Las animaciones de ataque, daño y muerte
+siguen usando sus hojas existentes. Los originales y las hojas derivadas se
+registran en `assets/CREDITS.md`.

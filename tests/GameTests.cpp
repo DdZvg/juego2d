@@ -12,10 +12,12 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace
@@ -434,6 +436,43 @@ void testAnimationAdvanceLoopAndFinish()
 	check(threw, "requesting a rectangle from an empty animation throws");
 }
 
+void testPlayerEightDirectionRunFacing()
+{
+	const World world;
+	Player player({1500.f, 1500.f});
+	const std::array<std::pair<sf::Vector2f, FacingDirection>, 8> directions{{
+		{{0.f, -1.f}, FacingDirection::Up},
+		{{1.f, -1.f}, FacingDirection::UpRight},
+		{{1.f, 0.f}, FacingDirection::Right},
+		{{1.f, 1.f}, FacingDirection::DownRight},
+		{{0.f, 1.f}, FacingDirection::Down},
+		{{-1.f, 1.f}, FacingDirection::DownLeft},
+		{{-1.f, 0.f}, FacingDirection::Left},
+		{{-1.f, -1.f}, FacingDirection::UpLeft}
+	}};
+
+	for (const auto& [direction, facing] : directions)
+	{
+		player.update(direction, 0.01f, world);
+		check(player.getFacing() == facing && player.getAnimationState() == PlayerAnimationState::Run,
+			"running animation selects the matching one of eight movement directions");
+	}
+
+	player.setAimDirection({1.f, -1.f});
+	player.update({0.f, 0.f}, 0.01f, world);
+	check(player.getFacing() == FacingDirection::UpRight && player.getAnimationState() == PlayerAnimationState::Idle,
+		"idle facing returns to the eight-direction mouse aim");
+
+	player.update({1.f, 0.f}, 0.01f, world);
+	player.setAimDirection({-1.f, -1.f});
+	player.triggerRangedAttack();
+	check(player.getFacing() == FacingDirection::UpLeft,
+		"attack animation faces the aim direction after running");
+	player.update({1.f, 0.f}, 0.01f, world);
+	check(player.getFacing() == FacingDirection::UpLeft,
+		"moving during an attack does not override its aim-facing direction");
+}
+
 void testPlayerAnimationStates()
 {
 	const World world;
@@ -500,6 +539,7 @@ int main()
 	testProjectileStopsAtWall();
 	testProjectileHitsEnemyBeforeWall();
 	testAnimationAdvanceLoopAndFinish();
+	testPlayerEightDirectionRunFacing();
 	testPlayerAnimationStates();
 	testEnemyContactDamageCooldown();
 

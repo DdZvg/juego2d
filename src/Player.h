@@ -31,7 +31,11 @@ enum class FacingDirection
 	Down,
 	Up,
 	Right,
-	Left
+	Left,
+	UpRight,
+	DownRight,
+	DownLeft,
+	UpLeft
 };
 
 class Player
@@ -68,15 +72,19 @@ private:
 		Idle = 0,
 		Locomotion = 1,
 		Combat = 2,
-		States = 3
+		States = 3,
+		LocomotionEight = 4,
+		IdleEight = 5
 	};
 
 	static constexpr std::size_t AnimationCount = 6;
+	static constexpr int DirectionalFrameSize = 128;
 
 	bool loadSheetWithAlphaKey(SheetId id, const std::string& filePath);
 	void setupAnimations();
 	void changeState(PlayerAnimationState newState);
 	void updateFacingFromAim();
+	void updateFacingFromDirection(sf::Vector2f direction);
 	const sf::Texture& getActiveTexture() const;
 	Animation& getAnimation(PlayerAnimationState state);
 	const Animation& getAnimation(PlayerAnimationState state) const;
@@ -87,8 +95,11 @@ private:
 	PlayerAnimationState m_state = PlayerAnimationState::Idle;
 	FacingDirection m_facing = FacingDirection::Down;
 	bool m_hasSprites = false;
+	bool m_hasDirectionalRunSprites = false;
+	bool m_hasDirectionalIdleSprites = false;
+	bool m_isMoving = false;
 
-	std::array<sf::Texture, 4> m_textures;
+	std::array<sf::Texture, 6> m_textures;
 	std::array<Animation, AnimationCount> m_animations;
 	sf::Sprite m_sprite;
 
