@@ -5,10 +5,13 @@ find_package(SFML 3 REQUIRED COMPONENTS Graphics)
 
 add_library(game_core
     src/Player.cpp
+    src/Animation.cpp
     src/Camera.cpp
     src/World.cpp
     src/InputManager.cpp
     src/HealthComponent.cpp
+    src/StatusEffectComponent.cpp
+    src/Weapon.cpp
     src/Enemy.cpp
     src/Projectile.cpp
     src/CombatSystem.cpp
@@ -22,6 +25,13 @@ add_executable(juego src/main.cpp src/Game.cpp)
 target_compile_features(juego PRIVATE cxx_std_17)
 target_link_libraries(juego PRIVATE game_core)
 set_target_properties(juego PROPERTIES CXX_EXTENSIONS OFF)
+
+add_custom_command(TARGET juego POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:juego>/assets
+    COMMENT "Copiando assets junto al ejecutable"
+)
 
 include(CTest)
 if(BUILD_TESTING)

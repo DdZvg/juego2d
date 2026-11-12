@@ -10,6 +10,22 @@ void InputManager::processEvent(const sf::Event& event)
 		m_closeRequested = true;
 	}
 
+	if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
+	{
+		if (keyPressed->code == sf::Keyboard::Key::Q)
+		{
+			m_abilityPressed = true;
+		}
+		else if (keyPressed->code == sf::Keyboard::Key::Num1)
+		{
+			m_weaponSlotRequest = 0;
+		}
+		else if (keyPressed->code == sf::Keyboard::Key::Num2)
+		{
+			m_weaponSlotRequest = 1;
+		}
+	}
+
 	if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>())
 	{
 		if (mousePressed->button == sf::Mouse::Button::Right)
@@ -40,6 +56,20 @@ bool InputManager::consumeShootPressed()
 	const bool pressed = m_shootPressed;
 	m_shootPressed = false;
 	return pressed;
+}
+
+bool InputManager::consumeAbilityPressed()
+{
+	const bool pressed = m_abilityPressed;
+	m_abilityPressed = false;
+	return pressed;
+}
+
+std::optional<std::size_t> InputManager::consumeWeaponSlotRequest()
+{
+	const std::optional<std::size_t> slot = m_weaponSlotRequest;
+	m_weaponSlotRequest.reset();
+	return slot;
 }
 
 sf::Vector2f InputManager::getMovementDirection() const

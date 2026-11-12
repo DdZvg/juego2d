@@ -5,14 +5,53 @@
 #include <SFML/Window/Event.hpp>
 
 #include <algorithm>
+#include <array>
+#include <filesystem>
+#include <iostream>
+#include <string>
+
+namespace
+{
+bool loadPlayerSprites(Player& player)
+{
+	const std::array<std::string, 4> candidates{
+		"assets/sprites/player",
+		"../assets/sprites/player",
+		"../../assets/sprites/player",
+		"../../../assets/sprites/player"
+	};
+
+	for (const std::string& candidate : candidates)
+	{
+		const std::filesystem::path folder(candidate);
+		if (!std::filesystem::exists(folder / "sheet_idle.png"))
+		{
+			continue;
+		}
+
+		if (player.loadAssets(folder.string()))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+}
 
 Game::Game()
-	: m_window(sf::VideoMode({WindowWidth, WindowHeight}), "Ecos del Abismo - Prototipo Fase 2"),
+	: m_window(sf::VideoMode({WindowWidth, WindowHeight}), "Ecos del Abismo - Prototipo Fase 3"),
 	  m_player({World::Width / 2.f, World::Height / 2.f}),
 	  m_camera({static_cast<float>(WindowWidth), static_cast<float>(WindowHeight)}, m_player.getPosition()),
 	  m_combat({World::Width / 2.f + 250.f, World::Height / 2.f})
 {
 	m_window.setVerticalSyncEnabled(true);
+
+	if (!loadPlayerSprites(m_player))
+	{
+		std::cerr << "Aviso: no se encontraron las hojas de sprites del jugador. "
+					 "Se usara el dibujo geometrico provisional.\n";
+	}
 }
 
 void Game::run()
@@ -59,15 +98,41 @@ void Game::update(float deltaSeconds)
 
 	const sf::Vector2f aimWorldPosition = m_input.getMouseWorldPosition(m_window, m_camera.getView());
 	m_player.setAimTarget(aimWorldPosition);
-	m_combat.update(deltaSeconds, m_player);
 
-	if (m_input.consumeMeleePressed())
+	if (const auto weaponSlot = m_input.consumeWeaponSlotRequest())
 	{
-		m_combat.tryMelee(m_player, aimWorldPosition);
+		m_combat.equipWeaponSlot(*weaponSlot);
 	}
-	if (m_input.consumeShootPressed())
+
+	m_combat.update(deltaSeconds, m_player, m_world);
+
+	if (m_player.isAlive() && m_input.consumeAbilityPressed())
 	{
-		m_combat.tryShoot(m_player, aimWorldPosition);
+		m_combat.tryAbyssalMark(m_player.getPosition(), aimWorldPosition);
+	}
+	else if (!m_player.isAlive())
+	{
+		m_input.consumeAbilityPressed();
+	}
+
+	if (m_player.isAlive() && m_input.consumeMeleePressed())
+	{
+		if (m_combat.tryMelee(m_player, aimWorldPosition))
+		{
+			m_player.triggerMeleeAttack();
+		}
+	}
+	if (m_player.isAlive() && m_input.consumeShootPressed())
+	{
+		if (m_combat.tryShoot(m_player, aimWorldPosition))
+		{
+			m_player.triggerRangedAttack();
+		}
+	}
+	else if (!m_player.isAlive())
+	{
+		m_input.consumeMeleePressed();
+		m_input.consumeShootPressed();
 	}
 }
 
@@ -99,4 +164,31 @@ void Game::renderHud()
 	healthBar.setPosition({Margin, Margin});
 	healthBar.setFillColor(sf::Color(104, 166, 103));
 	m_window.draw(healthBar);
+
+	constexpr float SlotSize = 24.f;
+	constexpr float SlotGap = 8.f;
+	const WeaponInventory& inventory = m_combat.getInventory();
+	for (std::size_t slot = 0; slot < inventory.size(); ++slot)
+	{
+		const bool equipped = slot == inventory.getEquippedSlot();
+		sf::RectangleShape weaponSlot({SlotSize, SlotSize});
+		weaponSlot.setPosition({Margin + static_cast<float>(slot) * (SlotSize + SlotGap), Margin + BarHeight + SlotGap});
+		weaponSlot.setFillColor(inventory.getWeaponAt(slot) == WeaponId::RustyBlade
+			? sf::Color(177, 115, 77)
+			: sf::Color(131, 105, 190));
+		weaponSlot.setOutlineColor(equipped ? sf::Color(250, 220, 150) : sf::Color(78, 74, 91));
+		weaponSlot.setOutlineThickness(equipped ? 3.f : 1.f);
+		m_window.draw(weaponSlot);
+	}
+
+	const float abilityReadyRatio = 1.f - m_combat.getAbyssalMarkCooldownRemaining() / CombatSystem::AbyssalMarkCooldown;
+	sf::RectangleShape abilityBackground({BarWidth, 6.f});
+	abilityBackground.setPosition({Margin, Margin + BarHeight + SlotSize + SlotGap * 2.f});
+	abilityBackground.setFillColor(sf::Color(55, 48, 69));
+	m_window.draw(abilityBackground);
+
+	sf::RectangleShape abilityCooldown({BarWidth * std::clamp(abilityReadyRatio, 0.f, 1.f), 6.f});
+	abilityCooldown.setPosition(abilityBackground.getPosition());
+	abilityCooldown.setFillColor(sf::Color(159, 119, 205));
+	m_window.draw(abilityCooldown);
 }

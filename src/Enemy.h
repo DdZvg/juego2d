@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HealthComponent.h"
+#include "StatusEffectComponent.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
@@ -21,14 +22,20 @@ public:
 	float getCurrentHealth() const;
 	float getMaximumHealth() const;
 	bool isAlive() const;
+	bool isMarked() const;
+	float getMarkTimeRemaining() const;
 	void update(float deltaSeconds, sf::Vector2f targetPosition);
-	void applyDamage(float amount);
+	void applyDamage(float amount, float markedDamageMultiplier = 1.f);
+	void applyAbyssalMark(float durationSeconds);
 	bool tryContactAttack();
 	void render(sf::RenderTarget& target) const;
 
 private:
+	void updateAppearance();
+
 	sf::Vector2f m_position;
 	HealthComponent m_health;
+	StatusEffectComponent m_statusEffects;
 	float m_contactCooldown = 0.f;
 	sf::CircleShape m_body;
 };

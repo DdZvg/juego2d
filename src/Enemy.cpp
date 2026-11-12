@@ -22,6 +22,7 @@ Enemy::Enemy(sf::Vector2f position)
 	m_body.setOutlineColor(sf::Color(202, 91, 94));
 	m_body.setOutlineThickness(3.f);
 	m_body.setPosition(m_position);
+	updateAppearance();
 }
 
 sf::Vector2f Enemy::getPosition() const
@@ -44,9 +45,21 @@ bool Enemy::isAlive() const
 	return m_health.isAlive();
 }
 
+bool Enemy::isMarked() const
+{
+	return m_statusEffects.isMarked();
+}
+
+float Enemy::getMarkTimeRemaining() const
+{
+	return m_statusEffects.getMarkTimeRemaining();
+}
+
 void Enemy::update(float deltaSeconds, sf::Vector2f targetPosition)
 {
 	m_contactCooldown = std::max(0.f, m_contactCooldown - deltaSeconds);
+	m_statusEffects.update(deltaSeconds);
+	updateAppearance();
 
 	const sf::Vector2f offset = targetPosition - m_position;
 	const float distanceSquared = offset.x * offset.x + offset.y * offset.y;
@@ -59,9 +72,15 @@ void Enemy::update(float deltaSeconds, sf::Vector2f targetPosition)
 	}
 }
 
-void Enemy::applyDamage(float amount)
+void Enemy::applyDamage(float amount, float markedDamageMultiplier)
 {
-	m_health.applyDamage(amount);
+	m_health.applyDamage(m_statusEffects.calculateDamage(amount, markedDamageMultiplier));
+}
+
+void Enemy::applyAbyssalMark(float durationSeconds)
+{
+	m_statusEffects.applyAbyssalMark(durationSeconds);
+	updateAppearance();
 }
 
 bool Enemy::tryContactAttack()
@@ -73,6 +92,12 @@ bool Enemy::tryContactAttack()
 
 	m_contactCooldown = ContactCooldown;
 	return true;
+}
+
+void Enemy::updateAppearance()
+{
+	m_body.setFillColor(m_statusEffects.isMarked() ? sf::Color(120, 76, 158) : sf::Color(132, 52, 65));
+	m_body.setOutlineColor(m_statusEffects.isMarked() ? sf::Color(202, 151, 238) : sf::Color(202, 91, 94));
 }
 
 void Enemy::render(sf::RenderTarget& target) const
