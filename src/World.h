@@ -19,6 +19,9 @@ public:
 	sf::Vector2f constrainPosition(sf::Vector2f position, float margin) const;
 	sf::Vector2f moveWithCollisions(sf::Vector2f position, sf::Vector2f displacement, float halfExtent) const;
 	bool collides(const sf::FloatRect& bounds) const;
+	bool collidesCircle(sf::Vector2f center, float radius) const;
+	bool hasLineOfSight(sf::Vector2f from, sf::Vector2f to) const;
+	bool hasClearPath(sf::Vector2f from, sf::Vector2f to, float radius) const;
 	const std::vector<sf::FloatRect>& getObstacles() const;
 	void render(sf::RenderTarget& target, const sf::View& view) const;
 

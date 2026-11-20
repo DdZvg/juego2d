@@ -61,6 +61,7 @@ public:
 	void setAimTarget(sf::Vector2f worldPosition);
 	void setAimDirection(sf::Vector2f direction);
 	void applyDamage(float amount);
+	void restoreFullHealth();
 	void triggerMeleeAttack();
 	void triggerRangedAttack();
 	void update(sf::Vector2f movementDirection, float deltaSeconds, const World& world);

@@ -9,6 +9,8 @@ public:
 	float getMaximumHealth() const;
 	bool isAlive() const;
 	void applyDamage(float amount);
+	void heal(float amount);
+	void restoreFull();
 
 private:
 	float m_maximumHealth;

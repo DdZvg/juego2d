@@ -11,7 +11,8 @@ Projectile::Projectile(
 	float speed,
 	float maximumRange,
 	float damage,
-	float markedDamageMultiplier)
+	float markedDamageMultiplier,
+	ProjectileFaction faction)
 	: m_previousPosition(position),
 	  m_position(position),
 	  m_direction(direction),
@@ -19,6 +20,7 @@ Projectile::Projectile(
 	  m_maximumRange(std::max(0.f, maximumRange)),
 	  m_damage(std::max(0.f, damage)),
 	  m_markedDamageMultiplier(std::max(1.f, markedDamageMultiplier)),
+	  m_faction(faction),
 	  m_body(Radius)
 {
 	const float lengthSquared = m_direction.x * m_direction.x + m_direction.y * m_direction.y;
@@ -30,10 +32,23 @@ Projectile::Projectile(
 	}
 
 	m_body.setOrigin({Radius, Radius});
-	m_body.setFillColor(sf::Color(246, 202, 119));
-	m_body.setOutlineColor(sf::Color(255, 232, 173));
+	if (m_faction == ProjectileFaction::Enemy)
+	{
+		m_body.setFillColor(sf::Color(208, 78, 132));
+		m_body.setOutlineColor(sf::Color(252, 150, 190));
+	}
+	else
+	{
+		m_body.setFillColor(sf::Color(246, 202, 119));
+		m_body.setOutlineColor(sf::Color(255, 232, 173));
+	}
 	m_body.setOutlineThickness(2.f);
 	m_body.setPosition(m_position);
+}
+
+ProjectileFaction Projectile::getFaction() const
+{
+	return m_faction;
 }
 
 sf::Vector2f Projectile::getPosition() const

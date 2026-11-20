@@ -1,7 +1,8 @@
 # Solicitud de cambio de fase
 
-**Fase:** Fase 3 — Sistemas de combate
-**Estado:** Autorizada para implementación por el usuario; aceptación manual pendiente
+**Fase:** Fase 4 — Enemigos e IA
+**Estado:** Autorizada para implementación por el usuario el 2026-11-20;
+aceptación manual pendiente
 
 ## 1. Fases previas
 
@@ -10,79 +11,75 @@
 | Fase 0 — Entorno | Completada | SFML 3 mediante vcpkg; compilación Debug y Release; ventana verificada. |
 | Fase 1 — Prototipo jugable | Validada por el usuario | Movimiento, delta time, cámara, límites, paredes/obstáculos y colisión por ejes. |
 | Fase 2 — Combate básico | Aprobada por el usuario el 2026-11-12 | Ataque cuerpo a cuerpo, proyectil, enemigo, vida, daño y colisión de proyectiles contra paredes. |
+| Fase 3 — Sistemas de combate | Aceptada por el usuario el 2026-11-20 | Armas configurables, Marca abisal, enfriamientos, efectos y sinergia. |
 
-## 2. Alcance de la Fase 3 según el plan
+## 2. Alcance de la Fase 4 según el plan
 
-- Sistema de armas.
-- Datos configurables.
-- Habilidades activas.
-- Enfriamientos.
-- Efectos de estado.
-- Sinergias iniciales.
-- Inventario de expedición.
+- Estados de IA.
+- Enemigos cuerpo a cuerpo.
+- Enemigos a distancia.
+- Enemigos resistentes o de apoyo.
+- Navegación básica y obstáculos.
+- Oleadas y encuentros.
 
-## 3. Criterios de aceptación de la Fase 3
+## 3. Criterios de aceptación de la Fase 4
 
 Según la sección 22 del documento maestro:
 
-- Se pueden equipar armas diferentes.
-- Los atributos afectan el comportamiento.
-- Las habilidades respetan enfriamientos.
-- Los efectos se aplican y expiran correctamente.
-- Las sinergias funcionan sin duplicar daño accidentalmente.
+- Cada arquetipo tiene comportamiento distinguible.
+- Los enemigos no atraviesan paredes sin regla explícita.
+- La IA no consume recursos excesivos.
+- Se puede reiniciar un encuentro de prueba.
 
 ## 4. Evidencia disponible
 
 - Compilación Debug y Release correctas.
 - Pruebas automatizadas `game_tests` en verde en ambas configuraciones.
-- Se prueban inventario y ranuras, atributos distintos de armas, alcance y
-  enfriamientos melee, proyectiles configurables, Marca abisal, expiración,
-  cooldown y sinergia de daño.
-- Pruebas manuales de Fase 3: pendientes de ejecución en la ventana del juego.
+- Se prueban las definiciones y la carga de datos de enemigos, los cuatro
+  arquetipos (persecución, retirada, disparo con línea de visión,
+  resistencia y curación de apoyo), los proyectiles enemigos, la colisión
+  de círculos, la línea de visión, la navegación alrededor de paredes y la
+  progresión/reinicio de las tres oleadas.
+- Pruebas manuales de Fase 4: pendientes de ejecución en la ventana del
+  juego.
 
-## 5. Alcance y dependencias pendientes
+## 5. Decisiones de implementación
 
-- La Fase 1 ya fue validada por el usuario y la Fase 3 fue autorizada para
-  implementación.
-- Las definiciones de armas se mantienen centralizadas en código C++ sin
-  introducir un formato externo o dependencia innecesaria.
-- La sinergia de marca se verifica para evitar duplicar daño.
-- La Fase 3 aún requiere pruebas manuales y aceptación antes de pasar a Fase 4.
+- Cuatro arquetipos: Carroñero (melee), Arquero de ecos (ranged),
+  Baluarte (resistente) y Nodriza abisal (apoyo).
+- Estados de IA: `Idle`, `Chase`, `Attack`, `Reposition` y `Support`.
+- Navegación local con sonda de camino por segmentos, desvío persistente y
+  colisión por ejes. No es un pathfinding global; se documenta como deuda.
+- Encuentro de prueba de tres oleadas con posiciones relativas fijas y
+  retardo entre oleadas. La colocación procedural llegará con la Fase 5.
+- Reinicio con R, que restaura la vida del jugador para repetir la prueba.
+- Datos de enemigos en `assets/data/enemies.txt` con validación y
+  conservación de la configuración anterior si una carga falla.
 
 ## 6. Lista de comprobación manual
 
-### Fase 1
+### Fase 4
 
-- [ ] El jugador se mueve en las ocho direcciones con WASD o flechas.
-- [ ] La velocidad diagonal es igual a la horizontal y vertical.
-- [ ] La cámara sigue al jugador sin saltos.
-- [ ] El jugador no atraviesa los límites del mundo.
-- [ ] El jugador no atraviesa las paredes ni los obstáculos.
-- [ ] El jugador se desliza por el borde de una pared al moverse en diagonal.
-- [ ] El indicador dorado apunta en la dirección del cursor mientras la cámara se mueve.
+- [ ] Los Carroñeros persiguen y atacan por contacto.
+- [ ] Los Arqueros de ecos mantienen la distancia, se retiran al acercarse
+      y disparan solo con línea de visión.
+- [ ] Los proyectiles enemigos dañan al jugador y se detienen en paredes.
+- [ ] Los Baluartes resisten más daño y son claramente más lentos.
+- [ ] La Nodriza abisal cura a los enemigos cercanos con un pulso visible.
+- [ ] Los enemigos rodean las paredes y no las atraviesan.
+- [ ] Las tres oleadas avanzan tras despejar la anterior.
+- [ ] R reinicia el encuentro y restaura la vida del jugador.
+- [ ] El HUD muestra oleada, enemigos restantes y cuenta atrás.
+
+### Fases 1 a 3 (regresión)
+
+- [ ] Movimiento, cámara, límites y obstáculos siguen funcionando.
+- [ ] Ataques cuerpo a cuerpo y a distancia, marca y sinergia siguen
+      funcionando.
 - [ ] El juego se cierra con la X sin bloquearse.
-
-### Fase 2
-
-- [ ] El clic izquierdo dispara un proyectil hacia el cursor.
-- [ ] El clic derecho ejecuta el ataque cuerpo a cuerpo.
-- [ ] El enemigo recibe daño y puede morir.
-- [ ] El jugador recibe daño por contacto.
-- [ ] Los proyectiles se destruyen al impactar o al agotar su alcance.
-- [ ] Los proyectiles se detienen al impactar paredes y no dañan a enemigos detrás de ellas.
-- [ ] No se aplican impactos múltiples involuntarios.
-- [ ] La barra de salud del HUD refleja el daño.
-
-### Fase 3
-
-- [ ] Las teclas 1 y 2 equipan armas distintas y el HUD muestra la selección.
-- [ ] Alcance, daño y enfriamientos de cada arma se comportan como se espera.
-- [ ] Q marca al enemigo correcto según dirección y alcance.
-- [ ] La marca se muestra y expira; la sinergia aumenta el daño una sola vez.
-- [ ] La habilidad vuelve a estar disponible al terminar su enfriamiento.
 
 ## 7. Control de avance
 
-La implementación de Fase 3 fue autorizada por el usuario y está en curso.
-Este documento no representa su aceptación. No iniciar la Fase 4 hasta que
-se completen las pruebas manuales de Fase 3 y el usuario la acepte.
+La implementación de Fase 4 fue autorizada por el usuario y está en curso.
+Este documento no representa su aceptación. No iniciar la Fase 5 hasta que
+se completen las pruebas manuales de Fase 4 y el usuario la acepte.

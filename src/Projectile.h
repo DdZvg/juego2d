@@ -7,6 +7,12 @@
 
 #include <optional>
 
+enum class ProjectileFaction
+{
+	Player,
+	Enemy
+};
+
 class Projectile
 {
 public:
@@ -21,8 +27,10 @@ public:
 		float speed = Speed,
 		float maximumRange = MaximumRange,
 		float damage = Damage,
-		float markedDamageMultiplier = 1.25f);
+		float markedDamageMultiplier = 1.25f,
+		ProjectileFaction faction = ProjectileFaction::Player);
 
+	ProjectileFaction getFaction() const;
 	sf::Vector2f getPosition() const;
 	float getDamage() const;
 	float getMarkedDamageMultiplier() const;
@@ -41,6 +49,7 @@ private:
 	float m_maximumRange;
 	float m_damage;
 	float m_markedDamageMultiplier;
+	ProjectileFaction m_faction;
 	float m_travelled = 0.f;
 	sf::CircleShape m_body;
 };

@@ -14,6 +14,36 @@ const sf::Color BackgroundColor(23, 22, 30);
 const sf::Color GridColor(39, 37, 48);
 const sf::Color WallColor(62, 58, 78);
 const sf::Color WallOutlineColor(96, 90, 116);
+
+bool segmentIntersectsRect(sf::Vector2f from, sf::Vector2f to, const sf::FloatRect& rect)
+{
+	const float directionX = to.x - from.x;
+	const float directionY = to.y - from.y;
+	float entry = 0.f;
+	float exit = 1.f;
+
+	const auto clip = [&entry, &exit](float origin, float direction, float minimum, float maximum)
+	{
+		if (std::abs(direction) < 0.000001f)
+		{
+			return origin >= minimum && origin <= maximum;
+		}
+
+		float axisEntry = (minimum - origin) / direction;
+		float axisExit = (maximum - origin) / direction;
+		if (axisEntry > axisExit)
+		{
+			std::swap(axisEntry, axisExit);
+		}
+
+		entry = std::max(entry, axisEntry);
+		exit = std::min(exit, axisExit);
+		return entry <= exit;
+	};
+
+	return clip(from.x, directionX, rect.position.x, rect.position.x + rect.size.x) &&
+		clip(from.y, directionY, rect.position.y, rect.position.y + rect.size.y);
+}
 }
 
 World::World()
@@ -68,6 +98,54 @@ bool World::collides(const sf::FloatRect& bounds) const
 const std::vector<sf::FloatRect>& World::getObstacles() const
 {
 	return m_obstacles;
+}
+
+bool World::collidesCircle(sf::Vector2f center, float radius) const
+{
+	const float radiusSquared = radius * radius;
+	for (const sf::FloatRect& obstacle : m_obstacles)
+	{
+		const float closestX = std::clamp(center.x, obstacle.position.x, obstacle.position.x + obstacle.size.x);
+		const float closestY = std::clamp(center.y, obstacle.position.y, obstacle.position.y + obstacle.size.y);
+		const float differenceX = center.x - closestX;
+		const float differenceY = center.y - closestY;
+		if (differenceX * differenceX + differenceY * differenceY < radiusSquared)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool World::hasLineOfSight(sf::Vector2f from, sf::Vector2f to) const
+{
+	for (const sf::FloatRect& obstacle : m_obstacles)
+	{
+		if (segmentIntersectsRect(from, to, obstacle))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool World::hasClearPath(sf::Vector2f from, sf::Vector2f to, float radius) const
+{
+	const float clearance = std::max(1.f, radius - 1.f);
+	for (const sf::FloatRect& obstacle : m_obstacles)
+	{
+		const sf::FloatRect inflated(
+			{obstacle.position.x - clearance, obstacle.position.y - clearance},
+			{obstacle.size.x + clearance * 2.f, obstacle.size.y + clearance * 2.f});
+		if (segmentIntersectsRect(from, to, inflated))
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 float World::sweepAxis(sf::Vector2f position, float delta, float halfExtent, Axis axis) const

@@ -2,10 +2,12 @@
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <SFML/Window/Event.hpp>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -37,21 +39,63 @@ bool loadPlayerSprites(Player& player)
 
 	return false;
 }
+
+void loadWeaponData()
+{
+	const std::array<std::string, 4> candidates{
+		"assets/data/weapons.txt",
+		"../assets/data/weapons.txt",
+		"../../assets/data/weapons.txt",
+		"../../../assets/data/weapons.txt"
+	};
+
+	for (const std::string& candidate : candidates)
+	{
+		if (std::filesystem::exists(candidate) && loadWeaponDefinitions(candidate))
+		{
+			return;
+		}
+	}
+}
+
+void loadEnemyData()
+{
+	const std::array<std::string, 4> candidates{
+		"assets/data/enemies.txt",
+		"../assets/data/enemies.txt",
+		"../../assets/data/enemies.txt",
+		"../../../assets/data/enemies.txt"
+	};
+
+	for (const std::string& candidate : candidates)
+	{
+		if (std::filesystem::exists(candidate) && loadEnemyDefinitions(candidate))
+		{
+			return;
+		}
+	}
+}
 }
 
 Game::Game()
-	: m_window(sf::VideoMode({WindowWidth, WindowHeight}), "Ecos del Abismo - Prototipo Fase 3"),
+	: m_window(sf::VideoMode({WindowWidth, WindowHeight}), "Ecos del Abismo - Prototipo Fase 4"),
 	  m_player({World::Width / 2.f, World::Height / 2.f}),
 	  m_camera({static_cast<float>(WindowWidth), static_cast<float>(WindowHeight)}, m_player.getPosition()),
 	  m_combat({World::Width / 2.f + 250.f, World::Height / 2.f})
 {
 	m_window.setVerticalSyncEnabled(true);
 
+	loadWeaponData();
+	loadEnemyData();
+	m_hasHudFont = loadHudFont();
+
 	if (!loadPlayerSprites(m_player))
 	{
 		std::cerr << "Aviso: no se encontraron las hojas de sprites del jugador. "
 					 "Se usara el dibujo geometrico provisional.\n";
 	}
+
+	m_combat.startEncounter(m_player.getPosition(), m_world);
 }
 
 void Game::run()
@@ -93,6 +137,12 @@ void Game::processEvents()
 
 void Game::update(float deltaSeconds)
 {
+	if (m_input.consumeRestartPressed())
+	{
+		m_combat.restartEncounter(m_player.getPosition(), m_world);
+		m_player.restoreFullHealth();
+	}
+
 	m_player.update(m_input.getMovementDirection(), deltaSeconds, m_world);
 	m_camera.update(m_player.getPosition(), deltaSeconds, m_world.getSize());
 
@@ -191,4 +241,57 @@ void Game::renderHud()
 	abilityCooldown.setPosition(abilityBackground.getPosition());
 	abilityCooldown.setFillColor(sf::Color(159, 119, 205));
 	m_window.draw(abilityCooldown);
+
+	if (m_hasHudFont)
+	{
+		std::string status;
+		if (m_combat.isEncounterComplete())
+		{
+			status = "Encuentro completado - pulsa R para reiniciar";
+		}
+		else if (m_combat.isWaitingForNextWave())
+		{
+			status = "Oleada " + std::to_string(m_combat.getCurrentWaveNumber()) + "/" +
+				std::to_string(m_combat.getWaveCount()) + " despejada - siguiente en " +
+				std::to_string(static_cast<int>(std::ceil(m_combat.getNextWaveCountdown()))) + " s";
+		}
+		else
+		{
+			status = "Oleada " + std::to_string(m_combat.getCurrentWaveNumber()) + "/" +
+				std::to_string(m_combat.getWaveCount()) + " - Enemigos: " +
+				std::to_string(m_combat.getEnemyCount());
+		}
+
+		const float statusY = Margin + BarHeight + SlotSize + SlotGap * 2.f + 10.f;
+		sf::Text statusText(m_hudFont, status, 15);
+		statusText.setPosition({Margin, statusY});
+		statusText.setFillColor(sf::Color(220, 212, 236));
+		m_window.draw(statusText);
+
+		sf::Text hintText(m_hudFont, "R: reiniciar encuentro", 13);
+		hintText.setPosition({Margin, statusY + 22.f});
+		hintText.setFillColor(sf::Color(150, 142, 168));
+		m_window.draw(hintText);
+	}
+}
+
+bool Game::loadHudFont()
+{
+	const std::array<std::string, 5> candidates{
+		"assets/fonts/hud.ttf",
+		"../assets/fonts/hud.ttf",
+		"../../assets/fonts/hud.ttf",
+		"C:/Windows/Fonts/segoeui.ttf",
+		"C:/Windows/Fonts/arial.ttf"
+	};
+
+	for (const std::string& candidate : candidates)
+	{
+		if (std::filesystem::exists(candidate) && m_hudFont.openFromFile(candidate))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }

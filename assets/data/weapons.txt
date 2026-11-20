@@ -1,0 +1,26 @@
+# Definiciones de armas. Formato clave = valor, esquema versionado.
+schema_version = 1
+
+[weapon]
+id = RustyBlade
+display_name = Hoja herrumbrada
+melee_damage = 40
+melee_range = 112
+melee_cooldown = 0.45
+projectile_damage = 25
+projectile_speed = 700
+projectile_range = 700
+projectile_cooldown = 0.18
+marked_damage_multiplier = 1.25
+
+[weapon]
+id = EchoWand
+display_name = Vara de ecos
+melee_damage = 24
+melee_range = 78
+melee_cooldown = 0.60
+projectile_damage = 18
+projectile_speed = 880
+projectile_range = 900
+projectile_cooldown = 0.25
+marked_damage_multiplier = 1.5

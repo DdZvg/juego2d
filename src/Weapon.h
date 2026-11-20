@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -25,6 +26,9 @@ struct WeaponDefinition
 };
 
 const WeaponDefinition& getWeaponDefinition(WeaponId id);
+
+bool loadWeaponDefinitions(const std::string& filePath);
+void resetWeaponDefinitions();
 
 class WeaponInventory
 {

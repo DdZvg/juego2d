@@ -310,6 +310,15 @@ void Player::applyDamage(float amount)
 	}
 }
 
+void Player::restoreFullHealth()
+{
+	m_health.restoreFull();
+	if (m_state == PlayerAnimationState::Death)
+	{
+		changeState(PlayerAnimationState::Idle);
+	}
+}
+
 void Player::triggerMeleeAttack()
 {
 	if (m_state == PlayerAnimationState::Death)

@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "World.h"
 
+#include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 
@@ -20,6 +21,7 @@ private:
 	void update(float deltaSeconds);
 	void render();
 	void renderHud();
+	bool loadHudFont();
 
 	static constexpr unsigned int WindowWidth = 960;
 	static constexpr unsigned int WindowHeight = 640;
@@ -31,4 +33,6 @@ private:
 	InputManager m_input;
 	CombatSystem m_combat;
 	sf::Clock m_clock;
+	sf::Font m_hudFont;
+	bool m_hasHudFont = false;
 };

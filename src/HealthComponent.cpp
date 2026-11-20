@@ -30,3 +30,16 @@ void HealthComponent::applyDamage(float amount)
 		m_currentHealth = std::max(0.f, m_currentHealth - amount);
 	}
 }
+
+void HealthComponent::heal(float amount)
+{
+	if (amount > 0.f)
+	{
+		m_currentHealth = std::min(m_maximumHealth, m_currentHealth + amount);
+	}
+}
+
+void HealthComponent::restoreFull()
+{
+	m_currentHealth = m_maximumHealth;
+}

@@ -12,6 +12,8 @@ add_library(game_core
     src/HealthComponent.cpp
     src/StatusEffectComponent.cpp
     src/Weapon.cpp
+    src/EnemyArchetype.cpp
+    src/Encounter.cpp
     src/Enemy.cpp
     src/Projectile.cpp
     src/CombatSystem.cpp

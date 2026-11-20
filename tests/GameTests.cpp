@@ -1,6 +1,7 @@
 #include "Animation.h"
 #include "Camera.h"
 #include "CombatSystem.h"
+#include "EnemyArchetype.h"
 #include "HealthComponent.h"
 #include "InputManager.h"
 #include "Player.h"
@@ -14,6 +15,7 @@
 
 #include <array>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -36,6 +38,25 @@ void check(bool condition, const std::string& message)
 bool near(float actual, float expected, float tolerance = 0.05f)
 {
 	return std::abs(actual - expected) <= tolerance;
+}
+
+float distanceBetween(sf::Vector2f first, sf::Vector2f second)
+{
+	const sf::Vector2f difference = first - second;
+	return std::sqrt(difference.x * difference.x + difference.y * difference.y);
+}
+
+std::size_t findEnemyIndex(const CombatSystem& combat, EnemyArchetype archetype)
+{
+	for (std::size_t index = 0; index < combat.getEnemyCount(); ++index)
+	{
+		if (combat.getEnemy(index).getArchetype() == archetype)
+		{
+			return index;
+		}
+	}
+
+	return combat.getEnemyCount();
 }
 
 void testMovementAndWorldBounds()
@@ -172,6 +193,11 @@ void testMouseCombatInput()
 	input.processEvent(firstWeaponKey);
 	const std::optional<std::size_t> firstSlot = input.consumeWeaponSlotRequest();
 	check(firstSlot.has_value() && *firstSlot == 0, "1 requests the first inventory weapon");
+
+	sf::Event restartKey(sf::Event::KeyPressed{sf::Keyboard::Key::R});
+	input.processEvent(restartKey);
+	check(input.consumeRestartPressed() && !input.consumeRestartPressed(),
+		"R requests an encounter restart once per key event");
 }
 
 void testHealthAndAim()
@@ -512,6 +538,45 @@ void testPlayerAnimationStates()
 	check(player.getAnimationState() == PlayerAnimationState::Death, "death animation remains on its final state");
 }
 
+void testWeaponDataFileLoading()
+{
+	std::ofstream file("weapons_test.txt");
+	file << "schema_version = 1\n\n";
+	file << "[weapon]\nid = RustyBlade\ndisplay_name = Hoja de prueba\nmelee_damage = 60\nmelee_range = 130\nmelee_cooldown = 0.40\n";
+	file << "projectile_damage = 30\nprojectile_speed = 750\nprojectile_range = 720\nprojectile_cooldown = 0.20\n";
+	file << "marked_damage_multiplier = 1.3\n";
+	file.close();
+	check(loadWeaponDefinitions("weapons_test.txt"), "weapon definitions load from a data file");
+	check(near(getWeaponDefinition(WeaponId::RustyBlade).meleeDamage, 60.f) &&
+		near(getWeaponDefinition(WeaponId::RustyBlade).meleeRange, 130.f),
+		"weapon attributes come from the configured data instead of code constants");
+
+	{
+		std::ofstream invalid("weapons_invalid.txt");
+		invalid << "schema_version = 2\n[weapon]\nid = RustyBlade\nmelee_damage = 999\n";
+	}
+	check(!loadWeaponDefinitions("weapons_invalid.txt"), "an unsupported schema version is rejected");
+	check(!loadWeaponDefinitions("missing_weapons_file.txt"), "a missing data file changes nothing");
+	check(near(getWeaponDefinition(WeaponId::RustyBlade).meleeDamage, 60.f),
+		"failed loads keep the previously valid configuration");
+
+	resetWeaponDefinitions();
+	{
+		std::ofstream invalidValues("weapons_invalid_values.txt");
+		invalidValues << "schema_version = 1\n[weapon]\nid = RustyBlade\nmelee_damage = -5\nmarked_damage_multiplier = 0\n";
+	}
+	check(loadWeaponDefinitions("weapons_invalid_values.txt"), "invalid numeric values do not abort the load");
+	check(near(getWeaponDefinition(WeaponId::RustyBlade).meleeDamage, 40.f),
+		"invalid damage values keep the safe default instead of applying them");
+	check(near(getWeaponDefinition(WeaponId::RustyBlade).markedDamageMultiplier, 1.25f),
+		"invalid synergy multipliers keep the safe default");
+
+	std::remove("weapons_test.txt");
+	std::remove("weapons_invalid.txt");
+	std::remove("weapons_invalid_values.txt");
+	resetWeaponDefinitions();
+}
+
 void testEnemyContactDamageCooldown()
 {
 	const World world;
@@ -524,6 +589,249 @@ void testEnemyContactDamageCooldown()
 	combat.update(0.1f, player, world);
 	check(near(player.getCurrentHealth(), Player::MaximumHealth - Enemy::ContactDamage),
 		"enemy contact damage respects its cooldown");
+}
+
+void testEnemyDefinitionsAndDataFileLoading()
+{
+	resetEnemyDefinitions();
+	const EnemyDefinition& carronero = getEnemyDefinition(EnemyArchetype::Carronero);
+	const EnemyDefinition& arquero = getEnemyDefinition(EnemyArchetype::ArqueroEcos);
+	const EnemyDefinition& baluarte = getEnemyDefinition(EnemyArchetype::Baluarte);
+	const EnemyDefinition& nodriza = getEnemyDefinition(EnemyArchetype::Nodriza);
+
+	check(carronero.behavior == EnemyBehavior::Melee, "carronero is a melee archetype");
+	check(arquero.behavior == EnemyBehavior::Ranged, "echo archer is a ranged archetype");
+	check(nodriza.behavior == EnemyBehavior::Support, "abyssal nurse is a support archetype");
+	check(baluarte.damageReduction > 0.f && baluarte.maximumHealth > carronero.maximumHealth,
+		"bulwark is tougher and resists part of the incoming damage");
+	check(arquero.attackRange > 0.f && arquero.preferredRange > 0.f && arquero.projectileDamage > 0.f,
+		"ranged archetype configures its attack distance and projectile");
+	check(nodriza.supportRadius > 0.f && nodriza.supportHeal > 0.f,
+		"support archetype configures its healing pulse");
+
+	std::ofstream file("enemies_test.txt");
+	file << "schema_version = 1\n\n";
+	file << "[enemy]\nid = Carronero\ndisplay_name = Carronero de prueba\n";
+	file << "maximum_health = 140\nradius = 24\nmove_speed = 90\ncontact_damage = 14\n";
+	file << "contact_cooldown = 0.7\ndamage_reduction = 0.2\n";
+	file.close();
+	check(loadEnemyDefinitions("enemies_test.txt"), "enemy definitions load from a data file");
+	check(near(getEnemyDefinition(EnemyArchetype::Carronero).maximumHealth, 140.f) &&
+		near(getEnemyDefinition(EnemyArchetype::Carronero).radius, 24.f) &&
+		getEnemyDefinition(EnemyArchetype::Carronero).displayName == "Carronero de prueba",
+		"enemy attributes and display name come from the configured data");
+
+	{
+		std::ofstream invalid("enemies_invalid.txt");
+		invalid << "schema_version = 4\n[enemy]\nid = Carronero\nmaximum_health = 999\n";
+	}
+	check(!loadEnemyDefinitions("enemies_invalid.txt"), "an unsupported enemy schema version is rejected");
+	check(near(getEnemyDefinition(EnemyArchetype::Carronero).maximumHealth, 140.f),
+		"failed enemy loads keep the previous valid configuration");
+
+	resetEnemyDefinitions();
+	{
+		std::ofstream invalidValues("enemies_invalid_values.txt");
+		invalidValues << "schema_version = 1\n[enemy]\nid = Carronero\n";
+		invalidValues << "maximum_health = -5\ndamage_reduction = 2\nradius = 0\n";
+	}
+	check(loadEnemyDefinitions("enemies_invalid_values.txt"), "invalid enemy values do not abort the load");
+	check(near(getEnemyDefinition(EnemyArchetype::Carronero).maximumHealth, 100.f) &&
+		near(getEnemyDefinition(EnemyArchetype::Carronero).damageReduction, 0.f) &&
+		near(getEnemyDefinition(EnemyArchetype::Carronero).radius, 22.f),
+		"invalid enemy values keep the safe defaults");
+
+	std::remove("enemies_test.txt");
+	std::remove("enemies_invalid.txt");
+	std::remove("enemies_invalid_values.txt");
+	resetEnemyDefinitions();
+}
+
+void testEnemyAiBehaviors()
+{
+	const World world;
+
+	Player meleePlayer({1000.f, 1000.f});
+	CombatSystem meleeCombat;
+	Enemy& meleeEnemy = meleeCombat.spawnEnemy(EnemyArchetype::Carronero, {1200.f, 1000.f});
+	const float initialMeleeDistance = distanceBetween(meleeEnemy.getPosition(), meleePlayer.getPosition());
+	for (int frame = 0; frame < 10; ++frame)
+	{
+		meleeCombat.update(0.1f, meleePlayer, world);
+	}
+	check(distanceBetween(meleeEnemy.getPosition(), meleePlayer.getPosition()) < initialMeleeDistance &&
+		meleeEnemy.getState() == EnemyState::Chase,
+		"melee enemy chases the player while outside contact range");
+
+	Player rangedPlayer({1000.f, 1000.f});
+	CombatSystem rangedCombat;
+	rangedCombat.spawnEnemy(EnemyArchetype::ArqueroEcos, {1250.f, 1000.f});
+	rangedCombat.update(0.1f, rangedPlayer, world);
+	check(rangedCombat.getEnemy(0).getState() == EnemyState::Attack &&
+		rangedCombat.getProjectileCount() == 1,
+		"ranged enemy fires when the player is inside its attack range with line of sight");
+	for (int frame = 0; frame < 10; ++frame)
+	{
+		rangedCombat.update(0.1f, rangedPlayer, world);
+	}
+	check(rangedPlayer.getCurrentHealth() < Player::MaximumHealth,
+		"enemy projectile damages the player");
+
+	Player closePlayer({1000.f, 1000.f});
+	CombatSystem retreatCombat;
+	Enemy& archer = retreatCombat.spawnEnemy(EnemyArchetype::ArqueroEcos, {1100.f, 1000.f});
+	const float distanceBeforeRetreat = distanceBetween(archer.getPosition(), closePlayer.getPosition());
+	retreatCombat.update(0.2f, closePlayer, world);
+	check(distanceBetween(archer.getPosition(), closePlayer.getPosition()) > distanceBeforeRetreat &&
+		archer.getState() == EnemyState::Reposition,
+		"ranged enemy retreats when the player gets too close");
+
+	Player blockedPlayer({1700.f, 1500.f});
+	CombatSystem blockedCombat;
+	blockedCombat.spawnEnemy(EnemyArchetype::ArqueroEcos, {1950.f, 1500.f});
+	for (int frame = 0; frame < 5; ++frame)
+	{
+		blockedCombat.update(0.1f, blockedPlayer, world);
+	}
+	check(blockedCombat.getProjectileCount() == 0,
+		"ranged enemy does not shoot through a wall without line of sight");
+	check(blockedCombat.getEnemy(0).getState() == EnemyState::Chase,
+		"ranged enemy approaches when it cannot see the player");
+
+	Enemy bulwark({0.f, 0.f}, EnemyArchetype::Baluarte);
+	const float reduction = 1.f - getEnemyDefinition(EnemyArchetype::Baluarte).damageReduction;
+	bulwark.applyDamage(100.f);
+	check(near(bulwark.getCurrentHealth(), bulwark.getMaximumHealth() - 100.f * reduction),
+		"bulwark resists part of the incoming damage");
+
+	Player supportPlayer({2500.f, 2500.f});
+	CombatSystem supportCombat;
+	supportCombat.spawnEnemy(EnemyArchetype::Nodriza, {1000.f, 1000.f});
+	Enemy& ally = supportCombat.spawnEnemy(EnemyArchetype::Carronero, {1150.f, 1000.f});
+	ally.applyDamage(40.f);
+	supportCombat.update(0.1f, supportPlayer, world);
+	check(near(ally.getCurrentHealth(), 70.f),
+		"support enemy heals a nearby ally on its pulse");
+	supportCombat.update(2.6f, supportPlayer, world);
+	check(near(ally.getCurrentHealth(), 80.f),
+		"support pulse respects its cooldown and can heal again");
+}
+
+void testWorldLineOfSightAndCircleCollision()
+{
+	const World world;
+	const sf::FloatRect& wall = world.getObstacles().front();
+	const float wallCenterX = wall.position.x + wall.size.x / 2.f;
+
+	check(world.collidesCircle({wallCenterX, wall.position.y + wall.size.y / 2.f}, 4.f),
+		"circle inside a wall is detected as a collision");
+	check(!world.collidesCircle({300.f, 300.f}, Player::Radius),
+		"circle in open space is clear");
+	check(!world.hasLineOfSight(
+			{wallCenterX, wall.position.y - 40.f},
+			{wallCenterX, wall.position.y + wall.size.y + 40.f}),
+		"a wall blocks line of sight between two points");
+	check(world.hasLineOfSight({200.f, 200.f}, {600.f, 500.f}),
+		"open space provides line of sight");
+}
+
+void testEnemyNavigationAroundWalls()
+{
+	const World world;
+	Enemy enemy({1500.f, 1200.f});
+	const sf::Vector2f target{1500.f, 1400.f};
+	const float initialDistance = distanceBetween(enemy.getPosition(), target);
+
+	bool overlappedWall = false;
+	for (int frame = 0; frame < 340; ++frame)
+	{
+		enemy.update(0.05f, target, world, true);
+		if (world.collidesCircle(enemy.getPosition(), enemy.getRadius()))
+		{
+			overlappedWall = true;
+		}
+	}
+
+	check(!overlappedWall, "enemy never overlaps a wall while navigating");
+	check(enemy.getPosition().y > 1300.f, "enemy navigates around the wall to the other side");
+	check(distanceBetween(enemy.getPosition(), target) < initialDistance - 60.f,
+		"enemy reduces its distance to the target while avoiding obstacles");
+}
+
+void testEncounterWavesAndRestart()
+{
+	const World world;
+	Player player({1500.f, 1500.f});
+	CombatSystem combat;
+	combat.startEncounter({1500.f, 1500.f}, world);
+
+	check(combat.isEncounterActive() && !combat.isEncounterComplete(),
+		"starting an encounter activates the wave sequence");
+	check(combat.getCurrentWaveNumber() == 1 && combat.getWaveCount() == 3 && combat.getEnemyCount() == 3,
+		"first wave spawns its configured enemies");
+	const auto spawnsAreClear = [&combat, &world]()
+	{
+		for (std::size_t index = 0; index < combat.getEnemyCount(); ++index)
+		{
+			const Enemy& enemy = combat.getEnemy(index);
+			if (world.collidesCircle(enemy.getPosition(), enemy.getRadius()) ||
+				enemy.getPosition().x < enemy.getRadius() ||
+				enemy.getPosition().y < enemy.getRadius() ||
+				enemy.getPosition().x > World::Width - enemy.getRadius() ||
+				enemy.getPosition().y > World::Height - enemy.getRadius())
+			{
+				return false;
+			}
+		}
+		return true;
+	};
+	check(spawnsAreClear(), "encounter spawns are placed outside walls and inside the world");
+
+	for (std::size_t index = 0; index < combat.getEnemyCount(); ++index)
+	{
+		combat.getEnemy(index).applyDamage(100000.f);
+	}
+	combat.update(0.1f, player, world);
+	check(combat.getEnemyCount() == 0 && combat.isWaitingForNextWave(),
+		"clearing a wave starts the delay before the next wave");
+
+	combat.update(CombatSystem::WaveSpawnDelay, player, world);
+	check(combat.getCurrentWaveNumber() == 2 && combat.getEnemyCount() == 6,
+		"second wave spawns after the configured delay");
+	check(spawnsAreClear(), "second wave spawns are placed outside walls and inside the world");
+
+	for (std::size_t index = 0; index < combat.getEnemyCount(); ++index)
+	{
+		combat.getEnemy(index).applyDamage(100000.f);
+	}
+	combat.update(0.1f, player, world);
+	combat.update(CombatSystem::WaveSpawnDelay, player, world);
+	check(combat.getCurrentWaveNumber() == 3 && combat.getEnemyCount() == 6,
+		"third wave spawns with the heavier composition");
+	check(spawnsAreClear(), "third wave spawns are placed outside walls and inside the world");
+
+	for (std::size_t index = 0; index < combat.getEnemyCount(); ++index)
+	{
+		combat.getEnemy(index).applyDamage(100000.f);
+	}
+	combat.update(0.1f, player, world);
+	check(combat.isEncounterComplete() && !combat.isEncounterActive() && combat.getEnemyCount() == 0,
+		"clearing the final wave completes the encounter");
+
+	combat.restartEncounter({1500.f, 1500.f}, world);
+	check(combat.isEncounterActive() && !combat.isEncounterComplete() &&
+		combat.getCurrentWaveNumber() == 1 && combat.getEnemyCount() == 3,
+		"restarting restores the encounter to its first wave");
+}
+
+void testPlayerRestoreFullHealth()
+{
+	Player player({500.f, 500.f});
+	player.applyDamage(60.f);
+	check(near(player.getCurrentHealth(), Player::MaximumHealth - 60.f), "player takes damage before being restored");
+	player.restoreFullHealth();
+	check(near(player.getCurrentHealth(), Player::MaximumHealth) && player.isAlive(),
+		"restoring health returns the player to full health");
 }
 }
 
@@ -541,7 +849,16 @@ int main()
 	testAnimationAdvanceLoopAndFinish();
 	testPlayerEightDirectionRunFacing();
 	testPlayerAnimationStates();
+	testWeaponInventoryAndWeaponStats();
+	testAbyssalMarkAndDamageSynergy();
 	testEnemyContactDamageCooldown();
+	testWeaponDataFileLoading();
+	testEnemyDefinitionsAndDataFileLoading();
+	testEnemyAiBehaviors();
+	testWorldLineOfSightAndCircleCollision();
+	testEnemyNavigationAroundWalls();
+	testEncounterWavesAndRestart();
+	testPlayerRestoreFullHealth();
 
 	if (failures != 0)
 	{

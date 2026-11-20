@@ -11,10 +11,9 @@ y el usuario la autorice.
 | 0. Preparación del entorno | Completada | SFML 3 vía vcpkg; Debug y Release compilan; ventana verificada. |
 | 1. Prototipo jugable | Completada y validada por el usuario | Movimiento, delta time, cámara, límites, paredes/obstáculos y colisión por ejes. |
 | 2. Combate básico | Aprobada por el usuario | Ataque cuerpo a cuerpo, proyectil, enemigo, vida, daño y colisión de proyectiles contra paredes. |
-| 3. Sistemas de combate | En implementación, autorizada por el usuario | Armas, inventario inicial, Marca abisal, sinergia de daño y enfriamientos; falta comprobación manual y aceptación. |
-| 4. Enemigos e IA | No iniciada | No comenzar sin autorización tras cerrar la Fase 3. |
-| 4. Enemigos e IA | No iniciada | — |
-| 5. Mazmorra procedural | No iniciada | — |
+| 3. Sistemas de combate | Aceptada por el usuario | Armas equipables con estadísticas propias, inventario de expedición, Marca abisal con enfriamiento, sinergia de daño y datos configurables en `assets/data/weapons.txt`. |
+| 4. Enemigos e IA | Implementada, aceptación manual pendiente | Cuatro arquetipos con estados de IA, proyectiles enemigos, navegación con evitación de obstáculos, encuentro de tres oleadas y reinicio con R. Datos en `assets/data/enemies.txt`. |
+| 5. Mazmorra procedural | No iniciada | No comenzar sin autorización tras cerrar la Fase 4. |
 | 6. Recompensas y progresión | No iniciada | — |
 | 7. Jefes y dificultad adaptativa | No iniciada | — |
 | 8. Muerte, refugio y guardado | No iniciada | — |
@@ -25,19 +24,23 @@ y el usuario la autorice.
 
 - **Fase 1:** validada por el usuario.
 - **Fase 2:** aprobada por el usuario el 2026-11-12.
-- **Fase 3:** el usuario autorizó continuar con la siguiente fase; la
-  implementación sigue pendiente de aceptación. No hay autorización para
-  iniciar la Fase 4.
+- **Fase 3:** aceptada por el usuario el 2026-11-20 al autorizar el inicio
+  de la Fase 4.
+- **Fase 4:** autorizada por el usuario el 2026-11-20; implementación en
+  curso y pendiente de aceptación. No hay autorización para iniciar la
+  Fase 5.
 
 ## Pendientes inmediatos
 
-1. Comprobar manualmente los controles de combate de Fase 3: alternar armas,
-   probar alcance/daño/enfriamiento, apuntar Q a un enemigo, observar la marca,
-   su expiración, el daño adicional y la barra de enfriamiento.
-2. Confirmar en ejecución que siguen funcionando el movimiento, los límites,
-   la cámara, los obstáculos y los controles de combate de Fase 2.
+1. Comprobar manualmente la Fase 4: distinguir los cuatro arquetipos
+   (Carroñero, Arquero de ecos, Baluarte y Nodriza abisal), verificar que
+   los enemigos no atraviesan paredes, que la Nodriza cura aliados y que
+   las tres oleadas avanzan y se reinician con R.
+2. Confirmar en ejecución que siguen funcionando el movimiento, la cámara,
+   los límites, los obstáculos, el combate y los controles de las fases
+   anteriores.
 3. Corregir cualquier problema observado y solicitar aceptación antes de
-   iniciar la Fase 4.
+   iniciar la Fase 5.
 
 ## Pruebas automatizadas
 

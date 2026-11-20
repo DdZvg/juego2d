@@ -1,7 +1,7 @@
 # Ecos del Abismo
 
-> Estado: Fases 0, 1 y 2 completadas; Fase 3 en implementación con pruebas
-> automatizadas en Debug y Release. Pendiente de comprobación manual; Fase 4
+> Estado: Fases 0 a 3 aceptadas; Fase 4 en implementación con pruebas
+> automatizadas en Debug y Release. Pendiente de comprobación manual; Fase 5
 > no iniciada. Consulta `docs/ROADMAP.md` y `docs/SOLICITUD_CAMBIO_DE_FASE.md`.
 
 ## SFML 3 en Windows
@@ -22,7 +22,7 @@ $vcpkgToolchain = "$vs\VC\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
 La primera configuración descarga y compila SFML y sus dependencias; requiere conexión a Internet y puede tardar varios minutos. Luego ejecuta `build\Debug\juego.exe` para comprobar que abre la ventana y que se cierra con la X. Para abrirlo en Visual Studio, selecciona **Archivo > Abrir > Carpeta** y elige la carpeta que contiene `CMakeLists.txt`; Visual Studio detectará el proyecto CMake. Si Visual Studio está instalado en otra ubicación, ajusta `$vs` a su carpeta de instalación.
 
-`src/main.cpp` inicia el prototipo jugable de Fase 2, implementado con la API de SFML 3; no se deben mezclar ejemplos o encabezados de SFML 2.
+`src/main.cpp` inicia el prototipo jugable de Fase 4, implementado con la API de SFML 3; no se deben mezclar ejemplos o encabezados de SFML 2.
 
 ## Fase 1: movimiento, cámara y colisiones
 
@@ -39,11 +39,23 @@ La primera configuración descarga y compila SFML y sus dependencias; requiere c
 - El enemigo provisional persigue al jugador, recibe daño, muestra su salud y ataca por contacto con enfriamiento. La barra en la esquina superior izquierda muestra la vida del jugador.
 - El punto dorado junto al personaje indica hacia dónde apunta el mouse. La posición del cursor se transforma a coordenadas del mundo con la vista actual, incluso mientras se mueve la cámara.
 
-## Fase 3: sistemas de combate (en implementación)
+## Fase 3: sistemas de combate
 
 - **1 / 2:** equipa la Hoja herrumbrada o la Vara de ecos; cada arma configura daño, alcance y enfriamientos de sus ataques.
 - **Q:** intenta aplicar la Marca abisal al enemigo más cercano dentro del alcance y del arco de apuntado. Si encuentra objetivo, el efecto expira con el tiempo y respeta su enfriamiento; los impactos reciben la bonificación configurada por el arma.
 - Los indicadores de ranuras muestran el arma equipada y la barra bajo ellos representa el enfriamiento de la habilidad.
+- Fase aceptada por el usuario el 2026-11-20.
+
+## Fase 4: enemigos e IA (en implementación)
+
+- **Carroñero:** persigue al jugador y ataca por contacto; es el arquetipo básico.
+- **Arquero de ecos:** mantiene la distancia, se retira si el jugador se acerca y dispara proyectiles solo con línea de visión; las paredes bloquean sus disparos.
+- **Baluarte:** lento, con mucha vida y resistencia parcial al daño; presiona con ataques de contacto fuertes.
+- **Nodriza abisal:** evita el cuerpo a cuerpo y emite pulsos que curan a los enemigos cercanos.
+- Los enemigos navegan alrededor de paredes y obstáculos sin atravesarlos y se separan entre sí para no apilarse.
+- **Encuentro de prueba:** tres oleadas con composiciones crecientes y un retardo entre ellas. El HUD muestra la oleada, los enemigos restantes y la cuenta atrás.
+- **R:** reinicia el encuentro desde la primera oleada y restaura la vida del jugador.
+- Los atributos de los arquetipos se pueden ajustar en `assets/data/enemies.txt`.
 - Esta fase no está declarada aceptada todavía; la fase siguiente no ha comenzado.
 
 ## Compilar y probar
@@ -56,7 +68,7 @@ $ctest = "$vs\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe"
 & $ctest --test-dir build -C Debug --output-on-failure
 ```
 
-Las pruebas cubren movimiento y límites, cámara, entrada, vida, alcance y reutilización de ataques, trayectoria y colisión de proyectiles, muerte del enemigo, daño de contacto, inventario/selección de armas, estadísticas configurables y duración, enfriamiento y sinergia de la Marca abisal. La suite pasa en Debug y Release. Comprueba manualmente los controles de Fases 1 a 3 en la ventana, incluidos el apuntado mientras se mueve la cámara, el alcance visual de cada arma, la marca y su indicador de enfriamiento.
+Las pruebas cubren movimiento y límites, cámara, entrada, vida, alcance y reutilización de ataques, trayectoria y colisión de proyectiles, muerte del enemigo, daño de contacto, inventario/selección de armas, estadísticas configurables y duración, enfriamiento y sinergia de la Marca abisal, definiciones y carga de datos de enemigos, comportamiento de los cuatro arquetipos, proyectiles enemigos, línea de visión, navegación alrededor de paredes y progresión/reinicio del encuentro. La suite pasa en Debug y Release. Comprueba manualmente los controles de Fases 1 a 4 en la ventana, incluidos el apuntado mientras se mueve la cámara, el alcance visual de cada arma, la marca, la distinción de arquetipos, la navegación enemiga y el reinicio del encuentro con R.
 
 ## Recursos y documentación
 

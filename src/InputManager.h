@@ -16,6 +16,7 @@ public:
 	bool consumeMeleePressed();
 	bool consumeShootPressed();
 	bool consumeAbilityPressed();
+	bool consumeRestartPressed();
 	std::optional<std::size_t> consumeWeaponSlotRequest();
 	sf::Vector2f getMovementDirection() const;
 	sf::Vector2f getMouseWorldPosition(const sf::RenderWindow& window, const sf::View& view) const;
@@ -25,5 +26,6 @@ private:
 	bool m_meleePressed = false;
 	bool m_shootPressed = false;
 	bool m_abilityPressed = false;
+	bool m_restartPressed = false;
 	std::optional<std::size_t> m_weaponSlotRequest;
 };

@@ -1,0 +1,78 @@
+# Definiciones de enemigos. Formato clave = valor, esquema versionado.
+schema_version = 1
+
+[enemy]
+id = Carronero
+display_name = Carronero
+maximum_health = 100
+radius = 22
+move_speed = 85
+contact_damage = 12
+contact_cooldown = 0.8
+damage_reduction = 0
+attack_range = 0
+preferred_range = 0
+projectile_damage = 0
+projectile_speed = 0
+projectile_range = 0
+attack_cooldown = 0
+support_radius = 0
+support_heal = 0
+support_cooldown = 0
+
+[enemy]
+id = ArqueroEcos
+display_name = Arquero de ecos
+maximum_health = 60
+radius = 18
+move_speed = 95
+contact_damage = 6
+contact_cooldown = 1.0
+damage_reduction = 0
+attack_range = 440
+preferred_range = 300
+projectile_damage = 12
+projectile_speed = 430
+projectile_range = 560
+attack_cooldown = 1.6
+support_radius = 0
+support_heal = 0
+support_cooldown = 0
+
+[enemy]
+id = Baluarte
+display_name = Baluarte
+maximum_health = 280
+radius = 30
+move_speed = 55
+contact_damage = 20
+contact_cooldown = 1.2
+damage_reduction = 0.35
+attack_range = 0
+preferred_range = 0
+projectile_damage = 0
+projectile_speed = 0
+projectile_range = 0
+attack_cooldown = 0
+support_radius = 0
+support_heal = 0
+support_cooldown = 0
+
+[enemy]
+id = Nodriza
+display_name = Nodriza abisal
+maximum_health = 80
+radius = 22
+move_speed = 100
+contact_damage = 6
+contact_cooldown = 1.0
+damage_reduction = 0
+attack_range = 0
+preferred_range = 0
+projectile_damage = 0
+projectile_speed = 0
+projectile_range = 0
+attack_cooldown = 0
+support_radius = 300
+support_heal = 10
+support_cooldown = 2.5

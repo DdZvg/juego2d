@@ -16,6 +16,10 @@ void InputManager::processEvent(const sf::Event& event)
 		{
 			m_abilityPressed = true;
 		}
+		else if (keyPressed->code == sf::Keyboard::Key::R)
+		{
+			m_restartPressed = true;
+		}
 		else if (keyPressed->code == sf::Keyboard::Key::Num1)
 		{
 			m_weaponSlotRequest = 0;
@@ -62,6 +66,13 @@ bool InputManager::consumeAbilityPressed()
 {
 	const bool pressed = m_abilityPressed;
 	m_abilityPressed = false;
+	return pressed;
+}
+
+bool InputManager::consumeRestartPressed()
+{
+	const bool pressed = m_restartPressed;
+	m_restartPressed = false;
 	return pressed;
 }
 
